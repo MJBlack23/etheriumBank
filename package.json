@@ -10,6 +10,7 @@
     "react-scripts": "1.1.4",
     "web3": "^0.20.0"
   },
+  "homepage": "http://myname.github.io/myapp",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
