@@ -123,14 +123,16 @@ class App extends Component {
 
 
   makeDeposit(amount) {
-    const { contract } = this.state;
-    
+    const { web3, contract, userAddress } = this.state;
+    const value = web3.toWei(amount, 'ether');
+
     return new Promise((resolve, reject) => {
-      contract.deposit.call((error, success) => {
+      contract.deposit({ value, sender: userAddress, gas: 2000 }, (error, success) => {
         if (error) {
           return reject(error);
         }
         
+        console.log(success);
         return resolve(success);
       });
     });
@@ -138,13 +140,16 @@ class App extends Component {
 
 
   makeWithdraw(amount) {
-    const { contract } = this.state;
+    const { web3, userAddress, contract } = this.state;
+    const value = web3.toWei(amount, 'ether');
+    console.log(value);
+    
     return new Promise((resolve, reject) => {
-      contract.withdraw.call(amount, (error, success) => {
+      contract.withdraw(value, { gas: 2000 }, (error, success) => {
         if (error) {
           return reject(error);
         }
-
+        console.log(success);
         return resolve(success);
       });
     });
@@ -196,36 +201,37 @@ class App extends Component {
     return amount;
   }
 
-  async performAction(e) {
+  performAction(e) {
     e.preventDefault();
     const { actionType, actionAmount } = this.state;
+    let promise;
 
     switch (actionType) {
       case 'deposit':
-        try {
-          return this.makeDeposit();
-        } catch (error) {
-          this.setState(() => ({
-            ...this.state,
-            error: error.message,
-          }));
-        }
+        promise = this.makeDeposit(actionAmount);
         break;
 
       case 'withdraw':
-        try {
-          return this.makeWithdraw(actionAmount);
-        } catch (error) {
-          this.setState(() => ({
-            ...this.state,
-            error: error.message,
-          }));
-        }
+        promise = this.makeWithdraw(actionAmount);
         break;
 
       default:
         return;
     }
+
+    promise.then(() => {
+      this.refreshValues();
+    })
+      .catch((error) => {
+        if (error.message.startsWith('Error: MetaMask Tx Signature:')) {
+          return;
+        }
+        console.log(error);
+        this.setState(() => ({
+          ...this.state,
+          error: 'Looks like something went wrong.  Please try again!',
+        }));
+      });
   }
 
   renderError () {

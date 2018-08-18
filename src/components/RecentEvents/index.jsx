@@ -9,8 +9,10 @@ const RecentEvents = (props) => (
     <table className="table table-striped table-compact">
       <tbody>
         { props.events.map((event) => (
-          <tr>
-            <td>event.event</td>
+          <tr key={event.transactionHash}>
+            <td>{event.blockNumber}</td>
+            <td>{event.event}</td>
+            <td>{event.address}</td>
           </tr>
         ))}
       </tbody>
